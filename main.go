@@ -6,6 +6,7 @@ https://mp.weixin.qq.com/s/DuEGITdOYHYOXk-v-u2V5A
 https://mp.weixin.qq.com/s/vg9OSO4g0KG7iDQ7GXoUSQ
 */
 import (
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/sessions"
 	echo "github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -13,8 +14,25 @@ import (
 	"io"
 	"math/rand"
 	"os"
+	"sync"
 	"time"
 )
+
+type CustomValidator struct {
+	once     sync.Once
+	validate *validator.Validate
+}
+
+func (c *CustomValidator) lazyInit() {
+	c.once.Do(func() {
+		c.validate = validator.New()
+	})
+}
+
+func (c *CustomValidator) Validate(i interface{}) error {
+	c.lazyInit()
+	return c.validate.Struct(i)
+}
 
 // demo only. use config or parameter in prod env
 var cookieStore = sessions.NewCookieStore([]byte("studyecho"))
@@ -31,6 +49,8 @@ func init() {
 func main() {
 	// get an instance
 	e := echo.New()
+
+	e.Validator = &CustomValidator{}
 
 	// register router
 	//e.GET("/", func(context echo.Context) error {
