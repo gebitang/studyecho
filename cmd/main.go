@@ -12,22 +12,37 @@ import (
 	"studyecho/logger"
 )
 
-type Template struct {
-	templates *template.Template
-}
+//type Template struct {
+//	templates *template.Template
+//}
+//
+//func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+//	return t.templates.ExecuteTemplate(w, name, data)
+//}
 
-func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
-	return t.templates.ExecuteTemplate(w, name, data)
+type layoutTemplate struct{}
+
+var LayoutTemplate = &layoutTemplate{}
+
+func (l *layoutTemplate) Render(w io.Writer, contentTpl string, data interface{}, ctx echo.Context) error {
+	layout := "layout.html"
+	tpl, err := template.New(layout).ParseFiles("../template/common/"+layout, "../template/"+contentTpl)
+	if err != nil {
+		ctx.Logger().Debug("there is err ", err)
+		return err
+	}
+	return tpl.Execute(w, data)
 }
 
 func main() {
 	e := echo.New()
 
-	tpl := &Template{
-		templates: template.Must(template.ParseGlob("template/*.html")),
-	}
+	//tpl := &Template{
+	//	templates: template.Must(template.ParseGlob("template/*.html")),
+	//}
+	//e.Renderer = tpl
 
-	e.Renderer = tpl
+	e.Renderer = LayoutTemplate
 
 	e.Logger = logger.New(os.Stdout)
 	e.Logger.SetLevel(log.DEBUG)
@@ -43,9 +58,12 @@ func main() {
 		return ctx.HTML(http.StatusOK, "hello world")
 	})
 
-	e.GET("/render", func(ctx echo.Context) error {
+	//e.GET("/render", func(ctx echo.Context) error {
+	//	return ctx.Render(http.StatusOK, "key", "gebitang")
+	//})
 
-		return ctx.Render(http.StatusOK, "key", "gebitang")
+	e.GET("/layout", func(ctx echo.Context) error {
+		return ctx.Render(http.StatusOK, "myIndex.html", nil)
 	})
 
 	e.Logger.Fatal(e.Start(":2222"))
