@@ -46,7 +46,7 @@ func init() {
 	}
 }
 
-func main() {
+func mainOld() {
 	// get an instance
 	e := echo.New()
 
